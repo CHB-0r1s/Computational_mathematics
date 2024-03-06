@@ -62,4 +62,67 @@ def simple_iterations_method(func, interval, epsilon):
 
 
 def newton_method(func, interval, epsilon):
-    pass
+    a, b = interval
+    x_sym = sp.symbols('x')
+    n = 1
+    start_expr = func(x_sym)
+
+    s_e_diff_1 = sp.diff(start_expr, x_sym)
+    s_e_diff_2 = sp.diff(s_e_diff_1, x_sym)
+
+    if start_expr.subs(x_sym, a) * s_e_diff_2.subs(x_sym, a) > 0:
+        x_prev = a
+    else:
+        x_prev = b
+
+    x_cur = x_prev - start_expr.subs(x_sym, x_prev) / s_e_diff_1.subs(x_sym, x_prev)
+    while abs(x_cur - x_prev) > epsilon:
+        x_prev, x_cur = x_cur, x_prev - start_expr.subs(x_sym, x_prev) / s_e_diff_1.subs(x_sym, x_prev)
+        n += 1
+    res = x_prev - start_expr.subs(x_sym, x_prev) / s_e_diff_1.subs(x_sym, x_prev)
+    return round(res, 3), round(func(res), 3), n
+
+
+def simple_iterations_method_for_system_2(func1, func2, intervals, epsilon):
+    n = 1
+    x1_sym = sp.symbols('x_1')
+    x2_sym = sp.symbols('x_2')
+
+    x_1_lower_bound, x_1_upper_bound = intervals[0]
+    x_2_lower_bound, x_2_upper_bound = intervals[1]
+
+    start_expr_1 = func1(x1_sym, x2_sym)
+    start_expr_2 = func2(x1_sym, x2_sym)
+
+    phi_1 = -1 * (start_expr_1 - x1_sym)
+    phi_2 = -1 * (start_expr_2 - x2_sym)
+
+    if not (
+            bool(
+                    abs(sp.diff(phi_1, x1_sym).subs(x1_sym, x_1_upper_bound).subs(x2_sym, x_2_upper_bound)) +
+                    abs(sp.diff(phi_1, x2_sym).subs(x2_sym, x_2_upper_bound).subs(x1_sym, x_1_upper_bound)) < 1
+            )
+            and
+            bool(
+                    abs(sp.diff(phi_2, x1_sym).subs(x1_sym, x_1_upper_bound).subs(x2_sym, x_2_upper_bound)) +
+                    abs(sp.diff(phi_2, x2_sym).subs(x2_sym, x_2_upper_bound).subs(x1_sym, x_1_upper_bound)) < 1
+            )
+    ):
+        print("Не сходиться! Задайте интервалы более строго.")
+        return None
+
+    x1_prev = x_1_upper_bound
+    x2_prev = x_2_upper_bound
+
+    x1_cur = phi_1.subs(x1_sym, x1_prev).subs(x2_sym, x2_prev)
+    x2_cur = phi_2.subs(x1_sym, x1_prev).subs(x2_sym, x2_prev)
+
+    while abs(x1_cur - x1_prev) > epsilon or abs(x2_cur - x2_prev) > epsilon:
+        x1_prev = x1_cur
+        x1_cur = phi_1.subs(x1_sym, x1_prev).subs(x2_sym, x2_prev)
+
+        x2_prev = x2_cur
+        x2_cur = phi_2.subs(x1_sym, x1_prev).subs(x2_sym, x2_prev)
+        n += 1
+
+    return (x1_cur, x2_cur), start_expr_1.subs(x1_sym, x1_cur).subs(x2_sym, x2_cur), n
