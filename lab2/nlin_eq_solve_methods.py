@@ -130,21 +130,26 @@ def simple_iterations_method_for_system_2(func1, func2, intervals, epsilon):
     ]
     lm_phi_2 = max(s_e_2_diff_G)
     phi_2 = phi_2.subs(lm_2, -1 / lm_phi_2)
-    # phi_2 = -1 * (3 * (x1_sym ** 3) + 2)
 
     if (
-            bool(
-                abs(sp.diff(phi_1, x1_sym).subs(x1_sym, x_1_upper_bound - epsilon).subs(x2_sym, x_2_upper_bound)) +
-                abs(sp.diff(phi_1, x2_sym).subs(x2_sym, x_2_upper_bound + epsilon).subs(x1_sym, x_1_upper_bound)) < 1
+            (
+                abs(sp.diff(phi_1, x1_sym).subs(x1_sym, x_1_upper_bound - epsilon).subs(x2_sym,
+                                                                                        x_2_upper_bound - epsilon)) +
+                abs(sp.diff(phi_1, x2_sym).subs(x2_sym, x_2_upper_bound - epsilon).subs(x1_sym,
+                                                                                        x_1_upper_bound - epsilon)) < 1
             )
             and
-            bool(
-                abs(sp.diff(phi_2, x1_sym).subs(x1_sym, x_1_upper_bound - epsilon).subs(x2_sym, x_2_upper_bound)) +
-                abs(sp.diff(phi_2, x2_sym).subs(x2_sym, x_2_upper_bound).subs(x1_sym, x_1_upper_bound - epsilon)) < 1
+            (
+                abs(sp.diff(phi_2, x1_sym).subs(x1_sym, x_1_upper_bound - epsilon).subs(x2_sym,
+                                                                                        x_2_upper_bound - epsilon)) +
+                abs(sp.diff(phi_2, x2_sym).subs(x2_sym, x_2_upper_bound - epsilon).subs(x1_sym,
+                                                                                        x_1_upper_bound - epsilon)) < 1
             )
     ):
-        print("Не сходиться! Задайте интервалы более строго.")
-        return None
+        print("Достаточное условие выполняется!")
+
+    else:
+        print("Достаточное условие не выполнено. Возможно, следует задать интервалы более строго!")
 
     x1_prev = x_1_upper_bound
     x2_prev = x_2_upper_bound
@@ -160,12 +165,19 @@ def simple_iterations_method_for_system_2(func1, func2, intervals, epsilon):
         x2_cur = phi_2.subs(x1_sym, x1_prev).subs(x2_sym, x2_prev)
         n += 1
 
-    return (x1_cur, x2_cur), start_expr_1.subs(x1_sym, x1_cur).subs(x2_sym, x2_cur), n
+        # print(n, float(x1_cur), float(x2_cur))
+
+        if n > 50:
+            print(f"Выполнено больше {50} итераций, а ответ не был получен. Введите более строгие интервалы.")
+
+    return ((float(x1_cur), float(x2_cur)),
+            (start_expr_1.subs(x1_sym, x1_cur).subs(x2_sym, x2_cur),
+             start_expr_2.subs(x1_sym, x1_cur).subs(x2_sym, x2_cur)), n)
 
 
-print(simple_iterations_method_for_system_2(
-    lambda x, y: 2 * x ** 2 - y - 5,
-    lambda x, y: 3 * x ** 3 + y + 2,
-    [[0.1, 0.83], [-4, -3.5]],
-    10 ** -5
-))
+# print(simple_iterations_method_for_system_2(
+#     lambda x, y: 2 * x ** 2 - y - 5,
+#     lambda x, y: 3 * x ** 3 + y + 2,
+#     [[0.2, 1], [-6, -1]],
+#     10 ** -5
+# ))
